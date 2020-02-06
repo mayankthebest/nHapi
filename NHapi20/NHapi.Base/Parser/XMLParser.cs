@@ -143,7 +143,7 @@ namespace NHapi.Base.Parser
 			String encoding = null;
 
 			//check for a number of expected strings 
-			String[] expected = new String[] {"<MSH.1", "<MSH.2", "</MSH>"};
+			String[] expected = new String[] { "<MSH.1", "<MSH.2", "</MSH>" };
 			bool isXML = true;
 			for (int i = 0; i < expected.Length; i++)
 			{
@@ -256,7 +256,7 @@ namespace NHapi.Base.Parser
 			}
 
 			XmlDocument doc = EncodeDocument(source);
-			((XmlElement) doc.DocumentElement).SetAttribute("xmlns", "urn:hl7-org:v2xml");
+			((XmlElement)doc.DocumentElement).SetAttribute("xmlns", "urn:hl7-org:v2xml");
 
 			StringWriter out_Renamed = new StringWriter();
 
@@ -290,7 +290,7 @@ namespace NHapi.Base.Parser
 			for (int i = 0; i < all.Count; i++)
 			{
 				String elementName = all.Item(i).Name;
-				if (Convert.ToInt16(all.Item(i).NodeType) == (short) XmlNodeType.Element && !done.Contains(elementName))
+				if (Convert.ToInt16(all.Item(i).NodeType) == (short)XmlNodeType.Element && !done.Contains(elementName))
 				{
 					done.Add(elementName);
 
@@ -321,7 +321,7 @@ namespace NHapi.Base.Parser
 			XmlNodeList reps = segmentElement.GetElementsByTagName(fieldName);
 			for (int i = 0; i < reps.Count; i++)
 			{
-				Parse(segmentObject.GetField(fieldNum, i), (XmlElement) reps.Item(i));
+				Parse(segmentObject.GetField(fieldNum, i), (XmlElement)reps.Item(i));
 			}
 		}
 
@@ -363,15 +363,15 @@ namespace NHapi.Base.Parser
 		{
 			if (datatypeObject is Varies)
 			{
-				ParseVaries((Varies) datatypeObject, datatypeElement);
+				ParseVaries((Varies)datatypeObject, datatypeElement);
 			}
 			else if (datatypeObject is IPrimitive)
 			{
-				ParsePrimitive((IPrimitive) datatypeObject, datatypeElement);
+				ParsePrimitive((IPrimitive)datatypeObject, datatypeElement);
 			}
 			else if (datatypeObject is IComposite)
 			{
-				ParseComposite((IComposite) datatypeObject, datatypeElement);
+				ParseComposite((IComposite)datatypeObject, datatypeElement);
 			}
 		}
 
@@ -404,7 +404,7 @@ namespace NHapi.Base.Parser
 			int c = 0;
 			while (c < children.Count && !hasElement)
 			{
-				if (Convert.ToInt16(children.Item(c).NodeType) == (short) XmlNodeType.Element)
+				if (Convert.ToInt16(children.Item(c).NodeType) == (short)XmlNodeType.Element)
 				{
 					hasElement = true;
 				}
@@ -422,7 +422,7 @@ namespace NHapi.Base.Parser
 			while (c < children.Count && !full)
 			{
 				XmlNode child = children.Item(c++);
-				if (Convert.ToInt16(child.NodeType) == (short) XmlNodeType.Text)
+				if (Convert.ToInt16(child.NodeType) == (short)XmlNodeType.Text)
 				{
 					try
 					{
@@ -505,9 +505,9 @@ namespace NHapi.Base.Parser
 				int compNum = 0;
 				for (int i = 0; i < children.Count; i++)
 				{
-					if (Convert.ToInt16(children.Item(i).NodeType) == (short) XmlNodeType.Element)
+					if (Convert.ToInt16(children.Item(i).NodeType) == (short)XmlNodeType.Element)
 					{
-						Parse(datatypeObject[compNum], (XmlElement) children.Item(i));
+						Parse(datatypeObject[compNum], (XmlElement)children.Item(i));
 						compNum++;
 					}
 				}
@@ -520,7 +520,7 @@ namespace NHapi.Base.Parser
 					XmlNodeList matchingElements = datatypeElement.GetElementsByTagName(MakeElementName(datatypeObject, i + 1));
 					if (matchingElements.Count > 0)
 					{
-						Parse(children[i], (XmlElement) matchingElements.Item(0)); //components don't repeat - use 1st
+						Parse(children[i], (XmlElement)matchingElements.Item(0)); //components don't repeat - use 1st
 					}
 				}
 			}
@@ -540,12 +540,26 @@ namespace NHapi.Base.Parser
 		/// <summary>Returns the expected XML element name for the given child of the given Segment </summary>
 		private String MakeElementName(ISegment s, int child)
 		{
+			if (UseLongNames)
+			{
+				string name = (s as AbstractSegment).GetFieldDescription(child).Replace(" ", "_");
+				name = XmlConvert.EncodeName(name);
+				return name;
+			}
+
 			return s.GetStructureName() + "." + child;
 		}
 
 		/// <summary>Returns the expected XML element name for the given child of the given Composite </summary>
 		private String MakeElementName(IComposite composite, int child)
 		{
+			if (UseLongNames && composite.Components.Length >= child)
+			{
+				string name = (composite.Components[child - 1] as AbstractType).Description.Replace(" ", "_");
+				name = XmlConvert.EncodeName(name);
+				return name;
+			}
+
 			return composite.TypeName + "." + child;
 		}
 
@@ -560,15 +574,15 @@ namespace NHapi.Base.Parser
 			bool hasData = false;
 			if (datatypeObject is Varies)
 			{
-				hasData = EncodeVaries((Varies) datatypeObject, datatypeElement);
+				hasData = EncodeVaries((Varies)datatypeObject, datatypeElement);
 			}
 			else if (datatypeObject is IPrimitive)
 			{
-				hasData = EncodePrimitive((IPrimitive) datatypeObject, datatypeElement);
+				hasData = EncodePrimitive((IPrimitive)datatypeObject, datatypeElement);
 			}
 			else if (datatypeObject is IComposite)
 			{
-				hasData = EncodeComposite((IComposite) datatypeObject, datatypeElement);
+				hasData = EncodeComposite((IComposite)datatypeObject, datatypeElement);
 			}
 			return hasData;
 		}
@@ -762,9 +776,9 @@ namespace NHapi.Base.Parser
 				FileInfo messageFile = new FileInfo(args[0]);
 				long fileLength = SupportClass.FileLength(messageFile);
 				StreamReader r = new StreamReader(messageFile.FullName, Encoding.Default);
-				char[] cbuf = new char[(int) fileLength];
-				Console.Out.WriteLine("Reading message file ... " + r.Read((Char[]) cbuf, 0, cbuf.Length) + " of " + fileLength +
-				                      " chars");
+				char[] cbuf = new char[(int)fileLength];
+				Console.Out.WriteLine("Reading message file ... " + r.Read((Char[])cbuf, 0, cbuf.Length) + " of " + fileLength +
+											 " chars");
 				r.Close();
 				String messString = Convert.ToString(cbuf);
 				IMessage mess = parser.Parse(messString);
@@ -779,20 +793,20 @@ namespace NHapi.Base.Parser
 					IStructure[] reps = mess.GetAll(structNames[i]);
 					for (int j = 0; j < reps.Length; j++)
 					{
-						if (typeof (ISegment).IsAssignableFrom(reps[j].GetType()))
+						if (typeof(ISegment).IsAssignableFrom(reps[j].GetType()))
 						{
 							//ignore groups
 							XmlDocument docBuilder = new XmlDocument();
 							XmlDocument doc = new XmlDocument(); //new doc for each segment
 							XmlElement root = doc.CreateElement(reps[j].GetType().FullName);
 							doc.AppendChild(root);
-							xp.Encode((ISegment) reps[j], root);
+							xp.Encode((ISegment)reps[j], root);
 							StringWriter out_Renamed = new StringWriter();
 							Console.Out.WriteLine("Segment " + reps[j].GetType().FullName + ": \r\n" + doc.OuterXml);
 
-							Type[] segmentConstructTypes = new Type[] {typeof (IMessage)};
-							Object[] segmentConstructArgs = new Object[] {null};
-							ISegment s = (ISegment) reps[j].GetType().GetConstructor(segmentConstructTypes).Invoke(segmentConstructArgs);
+							Type[] segmentConstructTypes = new Type[] { typeof(IMessage) };
+							Object[] segmentConstructArgs = new Object[] { null };
+							ISegment s = (ISegment)reps[j].GetType().GetConstructor(segmentConstructTypes).Invoke(segmentConstructArgs);
 							xp.Parse(s, root);
 							XmlDocument doc2 = new XmlDocument();
 							XmlElement root2 = doc2.CreateElement(s.GetType().FullName);
@@ -821,7 +835,7 @@ namespace NHapi.Base.Parser
 
 		static XMLParser()
 		{
-			log = HapiLogFactory.GetHapiLog(typeof (XMLParser));
+			log = HapiLogFactory.GetHapiLog(typeof(XMLParser));
 		}
 	}
 }

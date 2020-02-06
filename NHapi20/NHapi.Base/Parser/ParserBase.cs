@@ -103,6 +103,16 @@ namespace NHapi.Base.Parser
 			get { return EventMapper.Instance.Maps; }
 		}
 
+		/// <summary>
+		/// UseLongNames
+		/// </summary>
+		public bool UseLongNames { get; set; }
+
+		/// <summary>
+		/// UseOriginalMessageStructure
+		/// </summary>
+		public bool UseOriginalMessageStructure { get; set; }
+
 		#endregion
 
 		#region Parse

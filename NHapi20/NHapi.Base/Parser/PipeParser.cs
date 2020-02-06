@@ -261,6 +261,7 @@ namespace NHapi.Base.Parser
 				throw new HL7Exception("Can't find message structure (MSH-9-3): " + e.Message, HL7Exception.UNSUPPORTED_MESSAGE_TYPE);
 			}
 
+			explicityDefined = UseOriginalMessageStructure;
 			return new MessageStructure(messageStructure, explicityDefined);
 		}
 
